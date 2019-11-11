@@ -168,8 +168,7 @@ public:
             system ("xdg-open tree_dump.png");
     }
 
-private:
-
+protected:
     ///@brief A function for destructor... and btw it's private so it's NOT UR BUSINESS
     void free_tree (Node_t *tree)
     {

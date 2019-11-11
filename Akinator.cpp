@@ -94,11 +94,11 @@ public:
         fprintf (stream, "}");
     }
 
-    friend void go_lower_and_ask (Akinator_tree tree, Akinator_tree::Node_t *node);
+    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node);
 };
 
 
-void go_lower_and_ask (Akinator_tree tree, Akinator_tree::Node_t *node)
+void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node)
 {
     if ( node -> right && node -> left )
     {
@@ -119,7 +119,7 @@ void go_lower_and_ask (Akinator_tree tree, Akinator_tree::Node_t *node)
         printf ("%s", node -> data);
 }
 
-void game_logic (Akinator_tree tree)
+void game_logic (Akinator_tree &tree)
 {
     printf ("Здравствуй, мой друг. Сыграем в акинатора? Предупреждаю, обыграть меня ооочень непростоб хе-хе;)\n");
     scanf ("%s", userInput);
@@ -142,9 +142,9 @@ int main ()
     tree.read_tree((char*)"tree-base.txt");
     tree.draw ((char*)"open");
     FILE* stream = fopen ("out.txt", "w");
+    game_logic (tree);
     tree.write_undertree (stream, tree.head);
 
-    game_logic (tree);
 
 
     return 0;

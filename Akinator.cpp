@@ -102,8 +102,40 @@ public:
         write_undertree (stream, head);
         fclose (stream);
     }
+
+    bool deep_search (Node_t *node, char* character, char* characteristics, long &depth)
+    {
+        depth++;
+        if (! node -> left && ! node -> right)
+            if ( ! strcmp (node -> data, character) )
+            {
+                return true;
+            }
+            else
+            {
+                depth--;
+                return false;
+            }
+        if ( node -> left)
+        {
+            characteristics [depth] = 0;
+            if ( deep_search ( node -> left, character, characteristics, depth ) )
+                return true;
+        }
+        if ( node -> right)
+        {
+            characteristics [depth] = 1;
+            if ( deep_search ( node -> right, character, characteristics, depth) )
+                return true;
+        }
+        depth--;
+        return false;
+    }
+
+
     friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node);
     friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t *node);
+    friend void comporation_mode (Akinator_tree &tree);
 };
 
 bool check_answer ()
@@ -182,7 +214,7 @@ void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node)
     }
 }
 
-void game_logic (Akinator_tree &tree)
+void find_mode (Akinator_tree &tree)
 {
     printf ("Здравствуй, мой друг. Сыграем в акинатора?\n");
 
@@ -205,13 +237,106 @@ void game_logic (Akinator_tree &tree)
     }
 }
 
+Akinator_tree::Node_t* write_equals (Akinator_tree::Node_t *node, char* char1, char* char2, long &depth)
+{
+    Akinator_tree::Node_t* last_node = nullptr;
+    depth++;
+    if (char1 [depth] == char2 [depth])
+    {
+        printf ("\033[1;32m");
+        if ( char1 [depth] == 0 )
+            printf ("Не ");
+        printf ("%s\n", node -> data);
+        printf ("\033[0m");
+    }
+    else
+        return node;
+    if (char1 [depth] == char2 [depth])
+        if ( char1 [depth] == 0 )
+            last_node = write_equals (node -> left , char1, char2, depth);
+        else
+            last_node = write_equals (node -> right, char1, char2, depth);
+    else
+    return last_node;
+}
+
+void write_unequals (Akinator_tree::Node_t *node, char* charact, long depth)
+{
+    if ( ! node -> left && ! node -> right )
+        return;
+
+    printf ("\033[1;31m");
+    if (charact [depth] == 0)
+        printf ("Не ");
+    printf ("%s\n", node -> data);
+    printf ("\033[0m");
+    if (charact [depth] == 0 )
+    {
+        write_unequals (node -> left, charact, depth+1);
+    }
+    if (charact [depth] == 1 )
+    {
+        write_unequals (node -> right, charact, depth+1);
+    }
+}
+
+void write_comporation (Akinator_tree::Node_t *node, char* char1, char* char2, long &depth)
+{
+    printf ("\033[1;38m");
+    printf ("\nЧем они похожи:\n");
+    printf ("\033[0m");
+    Akinator_tree::Node_t* first_unequal = write_equals (node, char1, char2, depth);
+    printf ("\033[1;38m");
+    printf ("\nПервый, в отличии от второго:\n");
+    printf ("\033[0m");
+    write_unequals (first_unequal, char1, depth);
+    printf ("\033[1;38m");
+    printf ("\nВторой, в отличии от первого:\n");
+    printf ("\033[0m");
+    write_unequals (first_unequal, char2, depth);
+}
+
+void comporation_mode (Akinator_tree &tree)
+{
+    char character1[256] ="";
+    long depth = 0;
+    char* characteristics1 = (char*) calloc (tree.node_counter, sizeof (char));
+    char* characteristics2 = (char*) calloc (tree.node_counter, sizeof (char));
+
+    printf ("Кого вы хотите сравнить?\n");
+    scanf (" %[^\n]", userInput);
+    if ( ! tree.deep_search (tree.head, userInput, characteristics1, depth) )
+    {
+        printf ("Такого персонажа нет:(\n");
+        return;
+    }
+    strcpy (character1, userInput);
+    printf ("С кем сравниваем?\n");
+    scanf (" %[^\n]", userInput);
+    if ( ! strcmp (character1, userInput) )
+    {
+        printf ("Так это один и тот же персонаж!");
+        return;
+    }
+
+    depth = 0;
+    if ( ! tree.deep_search (tree.head, userInput, characteristics2, depth) )
+    {
+        printf ("Такого персонажа нет:(\n");
+        return;
+    }
+    depth = 0;
+    write_comporation (tree.head, characteristics1, characteristics2, depth);
+}
+
 
 int main ()
 {
     setlocale (LC_ALL, "rus");
     Akinator_tree tree;
     tree.read_tree((char*)"tree-base.txt");
-    game_logic (tree);
+    //find_mode (tree);
+    comporation_mode (tree);
     tree.draw ((char*)"open");
     tree.write_tree((char*)"tree-base.txt");
 

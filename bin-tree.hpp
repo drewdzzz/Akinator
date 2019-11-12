@@ -150,7 +150,7 @@ public:
         system  ("dot -Tpng Tree_draw.dot -o tree_draw.png");
     }
 
-    void draw (char* arg)
+    void draw (const char* arg)
     {
         draw ();
         if ( strcmp (arg, "open") == 0 )

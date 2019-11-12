@@ -1,6 +1,11 @@
 #include "bin-tree.hpp"
 #include <cassert>
+#include <unistd.h>
+
 static const int BUFSIZE = 256;
+static const int INPUTSIZE = 256;
+static const char* TREE_INPUT = "tree-base.txt";
+static const char* TREE_OUTPUT = "tree-base.txt";
 
 static char userInput[BUFSIZE] = "";
 
@@ -87,7 +92,7 @@ class Akinator_tree : public Tree_t<char*>
 
 public:
 
-    void read_tree (char* input_file)
+    void read_tree (const char* input_file)
     {
         FILE* stream = fopen (input_file, "r");
         assert (stream);
@@ -95,7 +100,7 @@ public:
         fclose (stream);
     }
 
-    void write_tree (char* output_file)
+    void write_tree (const char* output_file)
     {
         FILE* stream = fopen (output_file, "w");
         assert (stream);
@@ -133,10 +138,12 @@ public:
     }
 
 
-    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node);
-    friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t *node);
+    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node);
+    friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node);
     friend void comporation_mode (Akinator_tree &tree);
 };
+
+
 
 bool check_answer ()
 {
@@ -153,7 +160,7 @@ bool check_answer ()
     }
 }
 
-void add_character (Akinator_tree &tree, Akinator_tree::Node_t *node)
+void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node)
 {
     int read_count;
     printf (":(\n"
@@ -170,11 +177,11 @@ void add_character (Akinator_tree &tree, Akinator_tree::Node_t *node)
     printf ("И чем же ваш персонаж отличается от моего?\n");
     scanf (" %[^\n]%n%", userInput, &read_count );
     node -> data = (char*)realloc (node -> data, (tree.read_count + 1) * sizeof (char) );
-    node -> data = userInput;
+    strcpy (node -> data, userInput);
 }
 
 
-void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node)
+void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node)
 {
     if ( node -> right && node -> left )
     {
@@ -210,13 +217,16 @@ void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t *node)
         if ( ! check_answer() )
         {
             add_character (tree, node);
+            #ifndef FREE_FROM_BASE_TREE
+                tree.write_tree (TREE_OUTPUT);
+            #endif
         }
     }
 }
 
 void find_mode (Akinator_tree &tree)
 {
-    printf ("Здравствуй, мой друг. Сыграем в акинатора?\n");
+    printf ("Здравствуй, мой друг. Ты точно готов поразиться моей гениальностью?\n");
 
     while (1)
     {
@@ -329,16 +339,103 @@ void comporation_mode (Akinator_tree &tree)
     write_comporation (tree.head, characteristics1, characteristics2, depth);
 }
 
+void menus (Akinator_tree &tree)
+{
+    char user_input[INPUTSIZE] = {};
+    printf ("************************************\n");
+    printf ("* Alawar inc.                      *\n");
+    printf ("*         presents...              *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("************************************\n");
+    sleep  (2);
+    system ("clear");
+    printf ("************************************\n");
+    printf ("* Alawar inc.                      *\n");
+    printf ("*         presents...              *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*         Another innovative game  *\n");
+    printf ("************************************\n");
+    sleep  (2);
+    system ("clear");
+    printf ("************************************\n");
+    printf ("* Alawar inc.                      *\n");
+    printf ("*         presents...              *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*             AKINATOR             *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*                                  *\n");
+    printf ("*         Another innovative game  *\n");
+    printf ("************************************\n");
+    sleep  (2);
+    system ("clear");
+
+    while (1)
+    {
+        printf ("Выберите режим:\n");
+        printf ("1. \033[1;34mЗагадай - ка\033[0m\n");
+        printf ("2. \033[1;35mСравнение объектов\033[0m\n");
+        printf ("3. \033[1;31mВыход\033[0m\n");
+        printf ("4. \033[1;36mХочу посмотреть твоё дерево!\033[0m\n");
+        printf ("(─‿‿─)\n\n\n\\\\Акинатор приехал с Казахстана, поэтому знает мало слов на нашем языке.\n"
+                "Чтобы Акинатор наверняка понял тебя, старайся отвечать да (yes) или нет (no)\n\n");
+        while (1)
+        {
+            scanf  (" %s", user_input);
+            if ( user_input [0] == '1' )
+            {
+                system("clear");
+                find_mode (tree);
+                break;
+            }
+            else if ( user_input [0] == '2' )
+            {
+                system("clear");
+                comporation_mode (tree);
+                fflush (stdin);
+                scanf ("%с", &userInput);
+                break;
+            }
+            else if ( user_input [0] == '3' )
+            {
+                return;
+            }
+            else if ( user_input [0] == '4' )
+            {
+                system ("clear");
+                tree.draw ("open");
+                break;
+            }
+            else
+            {
+                printf ("Не понимаю, скажи ещё раз\n");
+            }
+        }
+        system ("clear");
+    }
+}
 
 int main ()
 {
     setlocale (LC_ALL, "rus");
     Akinator_tree tree;
-    tree.read_tree((char*)"tree-base.txt");
-    //find_mode (tree);
-    comporation_mode (tree);
-    tree.draw ((char*)"open");
-    tree.write_tree((char*)"tree-base.txt");
+    tree.read_tree(TREE_INPUT);
+    menus (tree);
 
     return 0;
 }

@@ -2,6 +2,8 @@
 #include <cassert>
 #include <unistd.h>
 
+
+
 static const int BUFSIZE = 256;
 static const int INPUTSIZE = 256;
 static const char* TREE_INPUT = "tree-base.txt";
@@ -138,7 +140,7 @@ public:
     }
 
 
-    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node);
+    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command);
     friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node);
     friend void comporation_mode (Akinator_tree &tree);
 };
@@ -148,6 +150,7 @@ public:
 bool check_answer ()
 {
     printf ("\nЯ угадал?\n");
+    system ("echo \"Я угадал?\" | festival --tts --language russian");
     {
         scanf ("%s", userInput);
 
@@ -157,15 +160,18 @@ bool check_answer ()
             return false;
         else
             printf ("Неправильный ответ, попробуй ещё\n");
+            system ("echo \"Неправильный ответ, попробуй ещё\" | festival --tts --language russian");
     }
 }
 
 void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node)
 {
-    int read_count;
+    int read_count = 0;
     printf (":(\n"
             "Хорошо, кто это был?\n");
-    scanf (" %[^\n]%n%", userInput, &read_count );
+    system ("echo \"Хорошо, кто это был?\" | festival --tts --language russian");
+    scanf (" ");
+    scanf ("%[^\n]%n%", userInput, &read_count );
     tree.make_right (node, nullptr);
     node -> right -> data = (char*) calloc ( tree.read_count + 1, sizeof (char) );
     strcpy (node -> right -> data, userInput);
@@ -175,37 +181,45 @@ void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node)
     strcpy (node -> left -> data, node -> data);
 
     printf ("И чем же ваш персонаж отличается от моего?\n");
-    scanf (" %[^\n]%n%", userInput, &read_count );
+    system ("echo \"И чем же ваш персонаж отличается от моего?\" | festival --tts --language russian");
+    scanf (" ");
+    scanf ("%[^\n]%n%", userInput, &read_count );
     node -> data = (char*)realloc (node -> data, (tree.read_count + 1) * sizeof (char) );
     strcpy (node -> data, userInput);
 }
 
 
-void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node)
+void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command)
 {
     if ( node -> right && node -> left )
     {
+        strcpy (voice_command, "echo \"");
+        strcat (voice_command, node -> data);
+        strcat (voice_command, "\"| festival --tts --language russian");
+
         printf ("\033[1;36m");
         tree.write_data (stdout, node -> data);
         printf ("?\n");
         printf ("\033[0m");
+        system (voice_command);
         while (1)
         {
             scanf ("%s", userInput);
 
             if ( ! strcmp ("да", userInput) || ! strcmp ("yes", userInput) )
             {
-                go_lower_and_ask (tree, node -> right);
+                go_lower_and_ask (tree, node -> right, voice_command);
                 break;
             }
             else if ( ! strcmp ("нет", userInput) || ! strcmp ("no", userInput) )
             {
-                go_lower_and_ask (tree, node -> left);
+                go_lower_and_ask (tree, node -> left, voice_command);
                 break;
             }
             else
             {
                 printf ("Неправильный ответ, попробуй ещё\n");
+                system ("echo \"Неправильный ответ, попробуй ещё\" | festival --tts --language russian");
             }
         }
     }
@@ -226,14 +240,16 @@ void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node)
 
 void find_mode (Akinator_tree &tree)
 {
+    char voice_command[BUFSIZE] = {};
     printf ("Здравствуй, мой друг. Ты точно готов поразиться моей гениальностью?\n");
+    system ("echo \"Предупреждаю, моя гениальность шокирует. Ты готов офигеть?\" | festival --tts --language russian");
 
     while (1)
     {
         scanf ("%s", userInput);
         if ( ! strcmp ("да", userInput) || ! strcmp ("yes", userInput) )
         {
-            go_lower_and_ask (tree, tree.head);
+            go_lower_and_ask (tree, tree.head, voice_command);
             break;
         }
         else if ( ! strcmp ("нет", userInput) || ! strcmp ("no", userInput) )
@@ -243,89 +259,118 @@ void find_mode (Akinator_tree &tree)
         else
         {
             printf ("Неправильный ответ, попробуй ещё\n");
+            system ("echo \"Неправильный ответ, попробуй ещё\" | festival --tts --language russian");
         }
     }
 }
 
-Akinator_tree::Node_t* write_equals (Akinator_tree::Node_t *node, char* char1, char* char2, long &depth)
+Akinator_tree::Node_t* write_equals (Akinator_tree::Node_t *node, char* char1, char* char2, long &depth, char* voice_command)
 {
     Akinator_tree::Node_t* last_node = nullptr;
     depth++;
     if (char1 [depth] == char2 [depth])
     {
+        strcpy (voice_command, "echo \"");
+
         printf ("\033[1;32m");
         if ( char1 [depth] == 0 )
+        {
             printf ("Не ");
+            strcat (voice_command, "Не");
+        }
         printf ("%s\n", node -> data);
         printf ("\033[0m");
+
+        strcat (voice_command, node -> data);
+        strcat (voice_command, "\"| festival --tts --language russian");
+        system (voice_command);
     }
     else
         return node;
     if (char1 [depth] == char2 [depth])
         if ( char1 [depth] == 0 )
-            last_node = write_equals (node -> left , char1, char2, depth);
+            last_node = write_equals (node -> left , char1, char2, depth, voice_command);
         else
-            last_node = write_equals (node -> right, char1, char2, depth);
+            last_node = write_equals (node -> right, char1, char2, depth, voice_command);
     else
     return last_node;
 }
 
-void write_unequals (Akinator_tree::Node_t *node, char* charact, long depth)
+void write_unequals (Akinator_tree::Node_t *node, char* charact, long depth, char* voice_command)
 {
     if ( ! node -> left && ! node -> right )
         return;
 
+    strcpy (voice_command, "echo \"");
+
     printf ("\033[1;31m");
     if (charact [depth] == 0)
+    {
         printf ("Не ");
+        strcat (voice_command, "Не");
+    }
     printf ("%s\n", node -> data);
     printf ("\033[0m");
+
+    strcat (voice_command, node -> data);
+    strcat (voice_command, "\"| festival --tts --language russian");
+    system (voice_command);
+
     if (charact [depth] == 0 )
     {
-        write_unequals (node -> left, charact, depth+1);
+        write_unequals (node -> left, charact, depth+1, voice_command);
     }
     if (charact [depth] == 1 )
     {
-        write_unequals (node -> right, charact, depth+1);
+        write_unequals (node -> right, charact, depth+1, voice_command);
     }
 }
 
-void write_comporation (Akinator_tree::Node_t *node, char* char1, char* char2, long &depth)
+void write_comporation (Akinator_tree::Node_t *node, char* char1, char* char2, long &depth, char* voice_command)
 {
     printf ("\033[1;38m");
     printf ("\nЧем они похожи:\n");
+    system ("echo \"Вот чем они похожи\" | festival --tts --language russian");
     printf ("\033[0m");
-    Akinator_tree::Node_t* first_unequal = write_equals (node, char1, char2, depth);
+    Akinator_tree::Node_t* first_unequal = write_equals (node, char1, char2, depth, voice_command);
     printf ("\033[1;38m");
     printf ("\nПервый, в отличии от второго:\n");
+    system ("echo \"Вот чем первый отличается от второго\" | festival --tts --language russian");
     printf ("\033[0m");
-    write_unequals (first_unequal, char1, depth);
+    write_unequals (first_unequal, char1, depth, voice_command);
     printf ("\033[1;38m");
     printf ("\nВторой, в отличии от первого:\n");
+    system ("echo \"Вот чем второй отличается от первого\" | festival --tts --language russian");
     printf ("\033[0m");
-    write_unequals (first_unequal, char2, depth);
+    write_unequals (first_unequal, char2, depth, voice_command);
 }
 
 void comporation_mode (Akinator_tree &tree)
 {
+    char voice_command [BUFSIZE] = {};
+
     char character1[256] ="";
     long depth = 0;
     char* characteristics1 = (char*) calloc (tree.node_counter, sizeof (char));
     char* characteristics2 = (char*) calloc (tree.node_counter, sizeof (char));
 
     printf ("Кого вы хотите сравнить?\n");
+    system ("echo \"Кого вы хотите сравнить\" | festival --tts --language russian");
     scanf (" %[^\n]", userInput);
     if ( ! tree.deep_search (tree.head, userInput, characteristics1, depth) )
     {
         printf ("Такого персонажа нет:(\n");
+        system ("echo \"Такого персонажа нет. Если хочешь просмотреть персонажей, попроси меня вывести дерево в меню\" | festival --tts --language russian");
         return;
     }
     strcpy (character1, userInput);
     printf ("С кем сравниваем?\n");
+    system ("echo \"С кем сравниваем?\" | festival --tts --language russian");
     scanf (" %[^\n]", userInput);
     if ( ! strcmp (character1, userInput) )
     {
         printf ("Так это один и тот же персонаж!");
+        system ("echo \"Ты издеваешься?\" | festival --tts --language russian");
         return;
     }
 
@@ -333,10 +378,11 @@ void comporation_mode (Akinator_tree &tree)
     if ( ! tree.deep_search (tree.head, userInput, characteristics2, depth) )
     {
         printf ("Такого персонажа нет:(\n");
+        system ("echo \"Такого персонажа нет\" | festival --tts --language russian");
         return;
     }
     depth = 0;
-    write_comporation (tree.head, characteristics1, characteristics2, depth);
+    write_comporation (tree.head, characteristics1, characteristics2, depth, voice_command);
 }
 
 void menus (Akinator_tree &tree)
@@ -392,8 +438,9 @@ void menus (Akinator_tree &tree)
         printf ("2. \033[1;35mСравнение объектов\033[0m\n");
         printf ("3. \033[1;31mВыход\033[0m\n");
         printf ("4. \033[1;36mХочу посмотреть твоё дерево!\033[0m\n");
-        printf ("(─‿‿─)\n\n\n\\\\Акинатор приехал с Казахстана, поэтому знает мало слов на нашем языке.\n"
+        printf ("(─‿‿─)\n\n\n//Акинатор приехал с Казахстана, поэтому знает мало слов на нашем языке.\n"
                 "Чтобы Акинатор наверняка понял тебя, старайся отвечать да (yes) или нет (no)\n\n");
+        system ("echo \"Выберите режим\" | festival --tts --language russian");
         while (1)
         {
             scanf  (" %s", user_input);
@@ -424,6 +471,7 @@ void menus (Akinator_tree &tree)
             else
             {
                 printf ("Не понимаю, скажи ещё раз\n");
+                system ("echo \"Не понимаю, скажи ещё раз\" | festival --tts --language russian");
             }
         }
         system ("clear");

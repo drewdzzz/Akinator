@@ -9,7 +9,6 @@ static const int INPUTSIZE = 256;
 static const char* TREE_INPUT = "tree-base.txt";
 static const char* TREE_OUTPUT = "tree-base.txt";
 
-static char userInput[BUFSIZE] = "";
 
 class Akinator_tree : public Tree_t<char*>
 {
@@ -140,14 +139,14 @@ public:
     }
 
 
-    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command);
-    friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node);
-    friend void comporation_mode (Akinator_tree &tree);
+    friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command, char* userInput);
+    friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* userInput);
+    friend void comporation_mode (Akinator_tree &tree, char* userInput);
 };
 
 
 
-bool check_answer ()
+bool check_answer (char* userInput)
 {
     printf ("\nЯ угадал?\n");
     system ("echo \"Я угадал?\" | festival --tts --language russian");
@@ -164,7 +163,7 @@ bool check_answer ()
     }
 }
 
-void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node)
+void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* userInput)
 {
     int read_count = 0;
     printf (":(\n"
@@ -189,7 +188,7 @@ void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node)
 }
 
 
-void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command)
+void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command, char* userInput)
 {
     if ( node -> right && node -> left )
     {
@@ -208,12 +207,12 @@ void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* 
 
             if ( ! strcmp ("да", userInput) || ! strcmp ("yes", userInput) )
             {
-                go_lower_and_ask (tree, node -> right, voice_command);
+                go_lower_and_ask (tree, node -> right, voice_command, userInput);
                 break;
             }
             else if ( ! strcmp ("нет", userInput) || ! strcmp ("no", userInput) )
             {
-                go_lower_and_ask (tree, node -> left, voice_command);
+                go_lower_and_ask (tree, node -> left, voice_command, userInput);
                 break;
             }
             else
@@ -225,12 +224,21 @@ void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* 
     }
     else
     {
+
         printf ("\033[1;32m");
         printf ("%s", node -> data);
         printf ("\033[0m");
-        if ( ! check_answer() )
+
+        strcpy (voice_command, "echo \"Это же");
+        strcat (voice_command, node -> data);
+        strcat (voice_command, "!\"| festival --tts --language russian");
+
+        system (voice_command);
+
+
+        if ( ! check_answer(userInput) )
         {
-            add_character (tree, node);
+            add_character (tree, node, userInput);
             #ifndef FREE_FROM_BASE_TREE
                 tree.write_tree (TREE_OUTPUT);
             #endif
@@ -238,7 +246,7 @@ void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* 
     }
 }
 
-void find_mode (Akinator_tree &tree)
+void find_mode (Akinator_tree &tree, char* userInput)
 {
     char voice_command[BUFSIZE] = {};
     printf ("Здравствуй, мой друг. Ты точно готов поразиться моей гениальностью?\n");
@@ -249,7 +257,7 @@ void find_mode (Akinator_tree &tree)
         scanf ("%s", userInput);
         if ( ! strcmp ("да", userInput) || ! strcmp ("yes", userInput) )
         {
-            go_lower_and_ask (tree, tree.head, voice_command);
+            go_lower_and_ask (tree, tree.head, voice_command, userInput);
             break;
         }
         else if ( ! strcmp ("нет", userInput) || ! strcmp ("no", userInput) )
@@ -330,22 +338,22 @@ void write_comporation (Akinator_tree::Node_t *node, char* char1, char* char2, l
 {
     printf ("\033[1;38m");
     printf ("\nЧем они похожи:\n");
-    system ("echo \"Вот чем они похожи\" | festival --tts --language russian");
     printf ("\033[0m");
+    system ("echo \"Вот чем они похожи\" | festival --tts --language russian");
     Akinator_tree::Node_t* first_unequal = write_equals (node, char1, char2, depth, voice_command);
     printf ("\033[1;38m");
     printf ("\nПервый, в отличии от второго:\n");
-    system ("echo \"Вот чем первый отличается от второго\" | festival --tts --language russian");
     printf ("\033[0m");
+    system ("echo \"Вот чем первый отличается от второго\" | festival --tts --language russian");
     write_unequals (first_unequal, char1, depth, voice_command);
     printf ("\033[1;38m");
     printf ("\nВторой, в отличии от первого:\n");
-    system ("echo \"Вот чем второй отличается от первого\" | festival --tts --language russian");
     printf ("\033[0m");
+    system ("echo \"Вот чем второй отличается от первого\" | festival --tts --language russian");
     write_unequals (first_unequal, char2, depth, voice_command);
 }
 
-void comporation_mode (Akinator_tree &tree)
+void comporation_mode (Akinator_tree &tree, char* userInput)
 {
     char voice_command [BUFSIZE] = {};
 
@@ -388,6 +396,7 @@ void comporation_mode (Akinator_tree &tree)
 void menus (Akinator_tree &tree)
 {
     char user_input[INPUTSIZE] = {};
+    system ("clear");
     printf ("************************************\n");
     printf ("* Alawar inc.                      *\n");
     printf ("*         presents...              *\n");
@@ -447,19 +456,19 @@ void menus (Akinator_tree &tree)
             if ( user_input [0] == '1' )
             {
                 system("clear");
-                find_mode (tree);
+                find_mode (tree, user_input);
                 break;
             }
             else if ( user_input [0] == '2' )
             {
                 system("clear");
-                comporation_mode (tree);
-                fflush (stdin);
-                scanf ("%с", &userInput);
+                comporation_mode (tree, user_input);
+                sleep (2);
                 break;
             }
             else if ( user_input [0] == '3' )
             {
+                system ("clear");
                 return;
             }
             else if ( user_input [0] == '4' )

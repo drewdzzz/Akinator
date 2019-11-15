@@ -17,6 +17,17 @@ class Akinator_tree : public Tree_t<char*>
     char buf[BUFSIZE] = "";
     bool YES_flag = false;
 
+    void free_tree (Node_t *tree) override
+    {
+        if (tree)
+        {
+            free_tree (tree -> left );
+            free_tree (tree -> right);
+            free (tree -> data);
+            delete (tree);
+        }
+    }
+
     void read_undertree (FILE* stream, Node_t *node)
     {
         assert (stream);
@@ -138,6 +149,10 @@ public:
         return false;
     }
 
+    ~Akinator_tree() override
+    {
+        free_tree (head);
+    }
 
     friend void go_lower_and_ask (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* voice_command, char* userInput);
     friend void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* userInput);
@@ -169,21 +184,19 @@ void add_character (Akinator_tree &tree, Akinator_tree::Node_t* &node, char* use
     printf (":(\n"
             "Хорошо, кто это был?\n");
     system ("echo \"Хорошо, кто это был?\" | festival --tts --language russian");
-    scanf (" ");
-    scanf ("%[^\n]%n%", userInput, &read_count );
+    scanf (" %[^\n]%n", userInput, &read_count );
+
     tree.make_right (node, nullptr);
-    node -> right -> data = (char*) calloc ( tree.read_count + 1, sizeof (char) );
+    node -> right -> data = (char*) calloc ( read_count + 1, sizeof (char) );
     strcpy (node -> right -> data, userInput);
 
     tree.make_left (node, nullptr);
-    node -> left -> data = (char*) calloc ( tree.read_count + 1, sizeof (char) );
-    strcpy (node -> left -> data, node -> data);
+    node -> left -> data = node -> data;
 
     printf ("И чем же ваш персонаж отличается от моего?\n");
     system ("echo \"И чем же ваш персонаж отличается от моего?\" | festival --tts --language russian");
-    scanf (" ");
-    scanf ("%[^\n]%n%", userInput, &read_count );
-    node -> data = (char*)realloc (node -> data, (tree.read_count + 1) * sizeof (char) );
+    scanf (" %[^\n]%n", userInput, &read_count );
+    node -> data = (char*)calloc (read_count + 1, sizeof (char) );
     strcpy (node -> data, userInput);
 }
 

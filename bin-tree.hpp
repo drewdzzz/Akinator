@@ -49,7 +49,7 @@ public:
     }
 
     ///@brief Destructor of Tree_t
-    ~Tree_t ()
+    virtual ~Tree_t ()
     {
         free_tree (head);
     }
@@ -179,13 +179,13 @@ public:
 
 protected:
     ///@brief A function for destructor... and btw it's private so it's NOT UR BUSINESS
-    void free_tree (Node_t *tree)
+    virtual void free_tree (Node_t *tree)
     {
         if (tree)
         {
             free_tree (tree -> left );
             free_tree (tree -> right);
-            delete (tree);
+            delete tree;
         }
     }
 

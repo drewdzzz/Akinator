@@ -4,7 +4,7 @@
 
 
 
-static const int BUFSIZE = 256;
+static const int BUFSIZE = 512;
 static const int INPUTSIZE = 256;
 static const char* TREE_INPUT = "tree-base.txt";
 static const char* TREE_OUTPUT = "tree-base.txt";
@@ -168,6 +168,15 @@ void print_and_say (char* speech)
     strcat (voice, "\" | festival --tts --language russian");
     system (voice);
 }
+void print_and_say (const char* speech)
+{
+    printf ("%s", speech);
+    char voice [BUFSIZE] = {};
+    strcpy (voice, "echo \"");
+    strcat (voice, speech);
+    strcat (voice, "\" | festival --tts --language russian");
+    system (voice);
+}
 
 
 bool check_answer (char* userInput)
@@ -290,17 +299,14 @@ Akinator_tree::Node_t* write_equals (Akinator_tree::Node_t *node, char* char1, c
 
         if ( char1 [depth] == 0 )
         {
-            strcpy (voice_command, " Не ");
+            strcat (voice_command, " Не ");
         }
         else
         {
-            strcpy (voice_command, " ");
+            strcat (voice_command, " ");
         }
         strcat (voice_command, node -> data);
-
-        printf ("\033[1;32m");
-        print_and_say (voice_command);
-        printf ("\033[0m");
+        strcat (voice_command, ",");
 
     }
     else
@@ -321,18 +327,15 @@ void write_unequals (Akinator_tree::Node_t *node, char* charact, long depth, cha
 
     if (charact [depth] == 0)
     {
-        strcpy (voice_command, " Не ");
+        strcat (voice_command, " Не ");
     }
     else
     {
-        strcpy (voice_command, " ");
+        strcat (voice_command, " ");
     }
     
     strcat (voice_command, node -> data);
-    
-    printf ("\033[1;31m");
-    print_and_say (voice_command);
-    printf (",\033[0m");
+    strcat (voice_command, ",");
    
     if (charact [depth] == 0 )
     {
@@ -346,33 +349,29 @@ void write_unequals (Akinator_tree::Node_t *node, char* charact, long depth, cha
 
 void write_comporation (Akinator_tree::Node_t *node, char* name1, char* name2, char* char1, char* char2, long &depth, char* voice_command)
 {
-    strcat (voice_command, name1);
+    strcpy (voice_command, name1);
     strcat (voice_command, " и ");
     strcat (voice_command, name2);
     strcat (voice_command, " похожи тем что они");
 
-    printf ("\033[1;38m");
+    Akinator_tree::Node_t* first_unequal = write_equals (node, char1, char2, depth, voice_command);
+    
+    printf ("\033[1;32m");
     print_and_say (voice_command);
     printf ("\033[0m");
-
-    Akinator_tree::Node_t* first_unequal = write_equals (node, char1, char2, depth, voice_command);
-    sleep (1);
-    printf (" ,");
 
     strcpy (voice_command, " но ");
     strcat (voice_command, name1);
 
-    print_and_say (voice_command);
-
     write_unequals (first_unequal, char1, depth, voice_command);
-    sleep (1);
 
-    printf (", ");
-    strcpy (voice_command, "а ");
+    strcat (voice_command, " а ");
     strcat (voice_command, name2);
-    print_and_say (voice_command);
     write_unequals (first_unequal, char2, depth, voice_command);
-    sleep (1);
+
+    printf ("\033[1;31m");
+    print_and_say (voice_command);
+    printf ("\033[0m");
 }
 
 void comporation_mode (Akinator_tree &tree, char* userInput)

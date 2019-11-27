@@ -159,18 +159,10 @@ public:
     friend void comporation_mode (Akinator_tree &tree, char* userInput);
 };
 
-void print_and_say (char* speech)
-{
-    printf ("%s", speech);
-    char voice [BUFSIZE] = {};
-    strcpy (voice, "echo \"");
-    strcat (voice, speech);
-    strcat (voice, "\" | festival --tts --language russian");
-    system (voice);
-}
 void print_and_say (const char* speech)
 {
     printf ("%s", speech);
+    fflush (stdout);
     char voice [BUFSIZE] = {};
     strcpy (voice, "echo \"");
     strcat (voice, speech);
